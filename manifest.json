@@ -14,7 +14,7 @@
     "50": "icon-locked.png"
   },
   "manifest_version": 2,
-  "name": "muteUFTabs",
+  "name": "mute-unfocused-tabs",
   "permissions": [
     "tabs"
   ],
