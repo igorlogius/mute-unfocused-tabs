@@ -1,0 +1,22 @@
+{
+  "author": "igorlogius",
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "browser_action": {
+    "default_icon": "icon.png",
+    "default_title": "lock audio state"
+  },
+  "description": "mute unfocused tabs",
+  "icons": {
+    "50": "icon-locked.png"
+  },
+  "manifest_version": 2,
+  "name": "muteUFTabs",
+  "permissions": [
+    "tabs"
+  ],
+  "version": "1.0"
+}
