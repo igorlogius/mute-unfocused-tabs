@@ -7,7 +7,7 @@
   },
   "browser_action": {
     "default_icon": "icon.png",
-    "default_title": "lock audio state"
+    "default_title": "disable unfocus mute"
   },
   "description": "mute unfocused tabs",
   "icons": {
