@@ -3,7 +3,7 @@ const extId = 'mute-unfocused-tabs';
 let locked = {};
 
 async function updateMuteState() {
-	let tabs = await browser.tabs.query({active: true, currentWindow:true});
+	let tabs = await browser.tabs.query({active: true});
 	const aid = tabs[0].id;
 	tabs = await browser.tabs.query({});
 	tabs.forEach( (tab) => {
@@ -37,7 +37,7 @@ async function onClicked(){
 }
 
 function onRemoved(tabId, removeInfo) {
-	if( typeof locked[tabId] === 'boolean') ) {
+	if( typeof locked[tabId] === 'boolean') {
 		delete locked[tabId];
 	}
 }
