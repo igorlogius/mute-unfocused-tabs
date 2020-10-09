@@ -17,8 +17,8 @@ EXTRDIR=$(mktemp -d)
 # download
 wget -q --show-progress 'https://github.com/igorlogius/mute-unfocused-tabs/archive/master.zip' -O $ZIPFILE
 
-# extract without paths and README
-unzip -j $ZIPFILE -d $EXTRDIR -x "*/README"
+# extract without paths and README and icon.xcf
+unzip -j $ZIPFILE -d $EXTRDIR -x "*/README" "*/icon.xcf"
 
 # re-pack as xpi (zip) without paths and extended file attributes 
 XPI="mute-unfocused-tabs-$(grep '"version"' $EXTRDIR/manifest.json |cut -d'"' -f4)-$(date '+%F_%T').xpi" 
