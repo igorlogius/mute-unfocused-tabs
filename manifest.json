@@ -11,6 +11,7 @@
   },
   "description": "mute unfocused tabs",
   "icons": {
+    "50": "icon.png",
     "50": "icon-locked.png"
   },
   "manifest_version": 2,
