@@ -11,13 +11,12 @@
   },
   "description": "mute unfocused tabs",
   "icons": {
-    "50": "icon.png",
-    "50": "icon-locked.png"
+    "50": "icon.png"
   },
   "manifest_version": 2,
   "name": "mute-unfocused-tabs",
   "permissions": [
     "tabs"
   ],
-  "version": "1.0.1"
+  "version": "1.0.2"
 }
