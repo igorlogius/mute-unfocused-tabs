@@ -1,16 +1,19 @@
 
-const extId = 'mute-unfocused-tabs';
+const temporary = browser.runtime.id.endsWith('@temporary-addon'); // debugging?
+const manifest = browser.runtime.getManifest();
+const extname = manifest.name;
+
+const log = (level, msg) => {
+	level = level.trim().toLowerCase();
+	if (['error','warn'].includes(level)
+		|| ( temporary && ['debug','info','log'].includes(level))
+	) {
+		console[level](extname + '::' + level.toUpperCase() + '::' + msg);
+		return;
+	}
+};
 
 let unmanaged = new Set();
-
-function onError(error) {
-	console.log(`${extId}::Error: ${error}`);
-}
-
-function setPageAction(id,path,title){
-	browser.browserAction.setIcon({tabId: id, path: path});
-	browser.browserAction.setTitle({tabId: id, title: title});
-}
 
 function onRemoved(tabId, removeInfo) {
 	if( unmanaged.has(tabId) ) {
@@ -18,34 +21,93 @@ function onRemoved(tabId, removeInfo) {
 	}
 }
 
-function updateMuteState() {
-	browser.tabs.query({active: true, currentWindow: true}).then(function(tabs) {
-		const aid = tabs[0].id;
-		browser.tabs.query({}).then(function(tabs) {
-			tabs.forEach( (tab) => {
-				if( unmanaged.has(tab.id) ) {
-					setPageAction(tab.id,'icon-locked.png', 'enable unfocus mute');
-				}else{
-					setPageAction(tab.id,'icon.png', 'disable unfocus mute');
-					// mute all managed, except the active tab
-					browser.tabs.update(tab.id, {muted: (tab.id !== aid)}); 
-				}
-			});
-		});
-	},onError);
+async function getWhitelisted() {
+
+	try {
+		store = await browser.storage.local.get('selectors');
+	}catch(e){
+		log('ERROR', 'access to rules storage failed');
+		return [];
+	}
+
+	if ( typeof store.selectors.forEach !== 'function' ) { 
+		log('ERROR', 'rules selectors not iterable');
+		return [];
+	}
+
+	const wlist = [];
+
+	store.selectors.forEach( (selector) => {
+
+		// check activ
+		if(typeof selector.activ !== 'boolean') { return; }
+		if(selector.activ !== true) { return; }
+
+		// check url regex 
+		if(typeof selector.url_regex !== 'string') { return; }
+		selector.url_regex = selector.url_regex.trim(); 
+		if(selector.url_regex === ''){ return; }
+
+		try { 
+			wlist.push(new RegExp(selector.url_regex));
+		} catch(e) {
+			log('WARN', 'invalid url regex : ' + selectors.url_regex);
+			return;
+		}
+
+	});
+
+	return wlist;
+
 }
 
-function onClicked(){
-	browser.tabs.query({active: true, currentWindow: true}).then(function(tabs) {
-		const aid = tabs[0].id;
-		if( unmanaged.has(aid) ){
-			unmanaged.delete(aid);
-			setPageAction(aid,'icon.png', 'disable unfocus mute');
-		}else{
-			unmanaged.add(aid);
-			setPageAction(aid,'icon-locked.png', 'enable unfocus mute');
+browser.browserAction.setBadgeBackgroundColor(
+	{color: 'white'}
+)
+
+async function updateMuteState() {
+	log('debug', 'updateMuteState');
+	let tabs = await browser.tabs.query({active: true, currentWindow: true});
+	const aid = tabs[0].id;
+	const wlist = await getWhitelisted();
+	tabs = await browser.tabs.query({});
+	tabs.forEach( (tab) => {
+		for (var i=0;i < wlist.length;i++) {
+			if(wlist[i].test(tab.url)) {
+				browser.browserAction.setBadgeText({tabId: tab.id, text: "n/a"});
+				if( unmanaged.has(aid) ){
+					unmanaged.delete(aid);
+				}
+				return;
+			}
 		}
-	},onError);
+		if( unmanaged.has(tab.id) ) {
+			browser.browserAction.setBadgeText({tabId: tab.id, text: "off"});
+		}else{
+			browser.browserAction.setBadgeText({tabId: tab.id, text: "on"});
+			browser.tabs.update(tab.id, {muted: (tab.id !== aid)}); 
+		}
+	});
+}
+
+async function onClicked(){
+	const tabs = await browser.tabs.query({active: true, currentWindow: true});
+	const aid = tabs[0].id;
+	const wlist = await getWhitelisted();
+	let onWL = false;
+	for (var i=0;i < wlist.length;i++) {
+		if(wlist[i].test(tabs[0].url)) {
+			onWL = true;
+			return;	
+		}
+	}
+	if( unmanaged.has(aid) ){
+		unmanaged.delete(aid);
+		browser.browserAction.setBadgeText({tabId: aid, text: "on"});
+	}else{
+		unmanaged.add(aid);
+		browser.browserAction.setBadgeText({tabId: aid, text: "off"});
+	}
 }
 
 // add listeners

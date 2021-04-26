@@ -7,7 +7,7 @@
   },
   "browser_action": {
     "default_icon": "icon.png",
-    "default_title": "disable unfocus mute"
+    "default_title": "toggle manage by mute-unfocused-tabs"
   },
   "description": "mute unfocused tabs",
   "icons": {
@@ -15,8 +15,12 @@
   },
   "manifest_version": 2,
   "name": "mute-unfocused-tabs",
+  "options_ui": {
+    "page": "options.html"
+  },
   "permissions": [
-    "tabs"
+    "tabs",
+    "storage"
   ],
-  "version": "1.0.2"
+  "version": "1.1.2"
 }
