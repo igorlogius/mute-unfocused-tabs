@@ -23,15 +23,26 @@ function onRemoved(tabId, removeInfo) {
 
 async function getWhitelisted() {
 
+	let store = undefined;
 	try {
 		store = await browser.storage.local.get('selectors');
 	}catch(e){
-		log('ERROR', 'access to rules storage failed');
+		log('debug', 'access to storage failed');
+		return [];
+	}
+
+	if( typeof store === 'undefined') {
+		log('debug', 'store is undefined');
+		return [];
+	}
+
+	if( typeof store.selectors === 'undefined') {
+		log('debug', 'store.selectors is undefined');
 		return [];
 	}
 
 	if ( typeof store.selectors.forEach !== 'function' ) { 
-		log('ERROR', 'rules selectors not iterable');
+		log('error', 'store.selectors is not iterable');
 		return [];
 	}
 
