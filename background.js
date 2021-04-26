@@ -72,9 +72,7 @@ async function getWhitelisted() {
 
 }
 
-browser.browserAction.setBadgeBackgroundColor(
-	{color: 'white'}
-)
+browser.browserAction.setBadgeBackgroundColor({color: 'white'});
 
 async function updateMuteState() {
 	log('debug', 'updateMuteState');
@@ -82,49 +80,48 @@ async function updateMuteState() {
 	const aid = tabs[0].id;
 	const wlist = await getWhitelisted();
 	tabs = await browser.tabs.query({});
-	tabs.forEach( (tab) => {
+	let skip = false;
+	tabs.forEach( async (tab) => {
+		skip = false;
 		for (var i=0;i < wlist.length;i++) {
 			if(wlist[i].test(tab.url)) {
-				browser.browserAction.setBadgeText({tabId: tab.id, text: "n/a"});
-				if( unmanaged.has(aid) ){
-					unmanaged.delete(aid);
+				if( !unmanaged.has(tab.id) ){
+					unmanaged.add(tab.id);
 				}
-				return;
+				await browser.browserAction.setBadgeText({tabId: tab.id, text: "na" }); // forced unmanaged 
+				skip = true;
 			}
 		}
-		if( unmanaged.has(tab.id) ) {
-			browser.browserAction.setBadgeText({tabId: tab.id, text: "off"});
-		}else{
-			browser.browserAction.setBadgeText({tabId: tab.id, text: "on"});
-			browser.tabs.update(tab.id, {muted: (tab.id !== aid)}); 
+		if(!skip) {
+			if( unmanaged.has(tab.id) ) {
+				await browser.browserAction.setBadgeText({tabId: tab.id, text: "off" }); // unmanaged 
+
+			}else{
+				await browser.tabs.update(tab.id, {muted: (tab.id !== aid)}); 
+				await browser.browserAction.setBadgeText({tabId: tab.id, text: "on" }); // managed 
+			}
 		}
 	});
 }
 
 async function onClicked(){
+	
 	const tabs = await browser.tabs.query({active: true, currentWindow: true});
-	const aid = tabs[0].id;
-	const wlist = await getWhitelisted();
-	let onWL = false;
-	for (var i=0;i < wlist.length;i++) {
-		if(wlist[i].test(tabs[0].url)) {
-			onWL = true;
-			return;	
-		}
-	}
+	const atab = tabs[0];
+	const aid = atab.id;
+
 	if( unmanaged.has(aid) ){
 		unmanaged.delete(aid);
-		browser.browserAction.setBadgeText({tabId: aid, text: "on"});
 	}else{
 		unmanaged.add(aid);
-		browser.browserAction.setBadgeText({tabId: aid, text: "off"});
 	}
+	updateMuteState();
 }
 
 // add listeners
 browser.browserAction.onClicked.addListener(onClicked);
 browser.tabs.onRemoved.addListener(onRemoved);
 browser.tabs.onActivated.addListener(updateMuteState); 
-browser.tabs.onUpdated.addListener(updateMuteState,{properties:['status']}); 
+//browser.tabs.onUpdated.addListener(updateMuteState,{properties:['status']}); 
 browser.windows.onFocusChanged.addListener(updateMuteState);
 browser.runtime.onInstalled.addListener(updateMuteState); 
