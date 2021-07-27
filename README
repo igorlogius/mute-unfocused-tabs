@@ -10,7 +10,7 @@ done
 [ $MISSING_REQ -ne 0 ] && { echo "Aborting because of missing dependency"; exit 1; }
 
 # addon/repo name
-ID=$(basename $AMO)
+ID=$(basename "$AMO")
 
 # create tmp storage
 ZIPFILE=$(mktemp)
