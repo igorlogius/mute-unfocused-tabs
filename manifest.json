@@ -14,7 +14,7 @@
     "50": "icon.png"
   },
   "manifest_version": 2,
-  "name": "mute-unfocused-tabs",
+  "name": "Mute Unfocused Tabs",
   "options_ui": {
     "page": "options.html"
   },
