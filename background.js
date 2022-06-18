@@ -63,12 +63,12 @@
             return [];
         }
 
-        if( typeof store.excluded === 'undefined') {
+        if( typeof store.selectors === 'undefined') {
             log('debug', 'store.selectors is undefined');
             return [];
         }
 
-        if ( typeof store.excluded.forEach !== 'function' ) {
+        if ( typeof store.selectors.forEach !== 'function' ) {
             log('error', 'store.selectors is not iterable');
             return [];
         }
@@ -87,7 +87,8 @@
             if(e.url_regex === ''){ return; }
 
             try {
-                list.push(new RegExp(e.url_regex));
+                log('debug', e.url_regex);
+                l.push(new RegExp(e.url_regex));
             } catch(e) {
                 log('WARN', 'invalid url regex : ' + e.url_regex);
                 return;
@@ -99,8 +100,11 @@
     }
 
     function isListed(url) {
+        let re;
         for (var i=0;i < list.length;i++) {
-            if(list[i].test(url)) {
+            re = new RegExp(re);
+            if(re.test(url)) {
+                log('debug', 'isListed: ' + url);
                 return true;
             }
         }
@@ -117,7 +121,7 @@
             // ignore not https? urls
             if(!url_regex.test(tab.url)){
                 browser.browserAction.setBadgeText({tabId: tab.id, text: "NA" });
-                browser.browserAction.setBadgeBackgroundColor({tabId: tab.id, color: 'gray'});
+                browser.browserAction.setBadgeBackgroundColor({tabId: tab.id, color: 'white'});
                 browser.browserAction.setTitle({tabId: tab.id, title: 'unmanaged'});
                 browser.browserAction.disable(tab.id);
                 return;
@@ -127,7 +131,7 @@
                 // manual
                 if(isListed(tab.url)){
                     browser.browserAction.setBadgeText({tabId: tab.id, text: "ON" });
-                    browser.browserAction.setBadgeBackgroundColor({tabId: tab.id, color: 'yellow'});
+                    browser.browserAction.setBadgeBackgroundColor({tabId: tab.id, color: 'green'});
                     browser.browserAction.setTitle({tabId: tab.id, title: 'managed, by list'});
                     browser.browserAction.disable(tab.id);
                     return;
@@ -146,7 +150,7 @@
                 // automatic
                 if(isListed(tab.url)){
                     browser.browserAction.setBadgeText({tabId: tab.id, text: "OFF" });
-                    browser.browserAction.setBadgeBackgroundColor({tabId: tab.id, color: 'yellow'});
+                    browser.browserAction.setBadgeBackgroundColor({tabId: tab.id, color: 'red'});
                     browser.browserAction.setTitle({tabId: tab.id, title: 'unmanaged, by list'});
                     browser.browserAction.disable(tab.id);
                     return;

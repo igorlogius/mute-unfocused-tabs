@@ -1,5 +1,7 @@
 /*global browser */
 
+var mainTableBody = document.getElementById('mainTableBody');
+
 function onChange(evt) {
 
     const id = evt.target.id;
@@ -59,12 +61,10 @@ function onChange(evt) {
 });
 
 function deleteRow(rowTr) {
-    var mainTableBody = document.getElementById('mainTableBody');
     mainTableBody.removeChild(rowTr);
 }
 
 function createTableRow(feed) {
-    var mainTableBody = document.getElementById('mainTableBody');
     var tr = mainTableBody.insertRow();
     var input;
 
@@ -99,7 +99,6 @@ function createTableRow(feed) {
 }
 
 function collectConfig() {
-    var mainTableBody = document.getElementById('mainTableBody');
     var feeds = [];
     for (var row = 0; row < mainTableBody.rows.length; row++) {
         try {
