@@ -13,8 +13,6 @@
         }
     };
 
-
-
     function setMuted(tabId, muted) {
         browser.tabs.update(tabId, { muted });
     }
@@ -48,8 +46,8 @@
         return store.mode;
     }
 
-    async function getWhitelist() {
-        log('debug', 'getWhitelist');
+    async function getExludedlist() {
+        log('debug', 'getExludedlist');
 
 
         let store = undefined;
@@ -75,7 +73,7 @@
             return [];
         }
 
-        const wlist = [];
+        const list = [];
 
         store.selectors.forEach( (selector) => {
 
@@ -89,7 +87,7 @@
             if(selector.url_regex === ''){ return; }
 
             try {
-                wlist.push(new RegExp(selector.url_regex));
+                list.push(new RegExp(selector.url_regex));
             } catch(e) {
                 log('WARN', 'invalid url regex : ' + selector.url_regex);
                 return;
@@ -97,13 +95,19 @@
 
         });
 
-        return wlist;
+        return list;
 
     }
 
-    function isWhiteListed(url) {
-        for (var i=0;i < wlist.length;i++) {
-            if(wlist[i].test(url)) {
+    const url_regex = new RegExp("^https?:\/\/");
+
+    function isExludedListed(url) {
+        // everything that doenst start with https? is unmanaged by default, so we disable the addon here
+        if(!url_regex.test(url)){
+            return true;
+        }
+        for (var i=0;i < exlist.length;i++) {
+            if(exlist[i].test(url)) {
                 return true;
             }
         }
@@ -114,21 +118,26 @@
         log('debug', 'updateMuteState_unmanaged');
         let tabs = await browser.tabs.query({active: true, currentWindow: true});
         const aid = tabs[0].id;
-        tabs = await browser.tabs.query({url: "<all_urls>"});
+        tabs = await browser.tabs.query({/*url: "<all_urls>"*/});
         tabs.forEach( async (tab) => {
-            if(isWhiteListed(tab.url)){
-                browser.browserAction.setBadgeText({tabId: tab.id, text: "NA" });
-                browser.browserAction.setBadgeBackgroundColor({tabId: tab.id, color: 'yellow'});
+            if(isExludedListed(tab.url)){
+                browser.browserAction.setBadgeText({tabId: tab.id, text: "" });
+                //browser.browserAction.setBadgeBackgroundColor({tabId: tab.id, color: 'yellow'});
+                browser.browserAction.setTitle({tabId: tab.id, title: 'unmanaged by whitelist'});
+                browser.browserAction.disable(tab.id);
                 return;
             }
             if( tabIdStore.has(tab.id) ) {
                 browser.browserAction.setBadgeText({tabId: tab.id, text: "OFF" });
                 browser.browserAction.setBadgeBackgroundColor({tabId: tab.id, color: 'red'});
+                browser.browserAction.setTitle({tabId: tab.id, title: 'unmanaged, click to manage'});
             } else {
                 setMuted(tab.id, tab.id !== aid);
                 browser.browserAction.setBadgeText({tabId: tab.id, text: "ON" });
                 browser.browserAction.setBadgeBackgroundColor({tabId: tab.id, color: 'green'});
+                browser.browserAction.setTitle({tabId: tab.id, title: 'managed, click to unmanage'});
             }
+            browser.browserAction.enable(tab.id);
         });
     }
 
@@ -137,30 +146,38 @@
         log('debug', 'updateMuteState_managed');
         let tabs = await browser.tabs.query({active: true, currentWindow: true});
         const aid = tabs[0].id;
-        tabs = (await browser.tabs.query({url: "<all_urls>"}));
+        tabs = (await browser.tabs.query({/*url: "<all_urls>"*/}));
         tabs.forEach( async (tab) => {
-            if(isWhiteListed(tab.url)){
-                browser.browserAction.setBadgeText({tabId: tab.id, text: "NA" });
-                browser.browserAction.setBadgeBackgroundColor({tabId: tab.id, color: 'yellow'});
+            if(isExludedListed(tab.url)){
+                browser.browserAction.setBadgeText({tabId: tab.id, text: "" });
+                //browser.browserAction.setBadgeBackgroundColor({tabId: tab.id, color: 'yellow'});
+                browser.browserAction.setTitle({tabId: tab.id, title: 'unmanaged by whitelist'});
+                browser.browserAction.disable(tab.id);
                 return;
             }
             if( tabIdStore.has(tab.id) ) {
                 setMuted(tab.id, tab.id !== aid);
                 browser.browserAction.setBadgeText({tabId: tab.id, text: "ON" });
                 browser.browserAction.setBadgeBackgroundColor({tabId: tab.id, color: 'green'});
+                browser.browserAction.setTitle({tabId: tab.id, title: 'managed, click to unmanage'});
             } else {
                 browser.browserAction.setBadgeText({tabId: tab.id, text: "OFF" });
                 browser.browserAction.setBadgeBackgroundColor({tabId: tab.id, color: 'red'});
+                browser.browserAction.setTitle({tabId: tab.id, title: 'unmanaged, click to manage'});
             }
+            browser.browserAction.enable(tab.id);
         });
     }
 
-    async function onClicked(){
+    async function onClicked(tab /*,data*/){
         log('debug', 'onClicked');
+        if(isExludedListed(tab.url)){
+            return;
+        }
 
-        const tabs = await browser.tabs.query({active: true, currentWindow: true});
-        const atab = tabs[0];
-        const aid = atab.id;
+        //const tabs = await browser.tabs.query({active: true, currentWindow: true});
+        //const atab = tabs[0];
+        const aid = tab.id; //atab.id;
 
         if(mode) { // managed
             if( tabIdStore.has(aid) ){
@@ -191,7 +208,7 @@
         log('debug', 'onStorageChange');
 
         mode = await getMode();
-        wlist = await getWhitelist();
+        exlist = await getExludedlist();
 
         // clear
         tabIdStore.clear();
@@ -204,7 +221,7 @@
     const extname = manifest.name;
 
     let mode = await getMode();
-    let wlist = await getWhitelist();
+    let exlist = await getExludedlist();
     let tabIdStore = new Set();
 
     browser.browserAction.setBadgeBackgroundColor({color: 'white'});
