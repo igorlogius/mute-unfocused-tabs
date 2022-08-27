@@ -170,20 +170,25 @@
         });
     }
 
-    async function onClicked(tab /*,data*/){
+    async function onClicked(/*tab ,data*/){
         log('debug', 'onClicked');
 
-        if(mode) { // manual
-            if( tabIdStore.has(tab.id) ){
-                tabIdStore.delete(tab.id);
-            }else{
-                tabIdStore.add(tab.id);
-            }
-        }else {  // automatic - default
-            if( tabIdStore.has(tab.id) ){
-                tabIdStore.delete(tab.id);
-            }else{
-                tabIdStore.add(tab.id);
+        // get all selected
+        const tabs = await browser.tabs.query({ highlighted: true, hidden: false, currentWindow: true });
+
+        for(const tab of tabs) {
+            if(mode) { // manual
+                if( tabIdStore.has(tab.id) ){
+                    tabIdStore.delete(tab.id);
+                }else{
+                    tabIdStore.add(tab.id);
+                }
+            }else {  // automatic - default
+                if( tabIdStore.has(tab.id) ){
+                    tabIdStore.delete(tab.id);
+                }else{
+                    tabIdStore.add(tab.id);
+                }
             }
         }
         updateMuteState();
