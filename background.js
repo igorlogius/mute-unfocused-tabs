@@ -146,6 +146,7 @@
             tabId: tab.id,
             title: "managed, by list",
           });
+          setMuted(tab.id, tab.id !== aid);
           browser.browserAction.disable(tab.id);
           return;
         }

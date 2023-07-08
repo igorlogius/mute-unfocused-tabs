@@ -15,5 +15,5 @@
     "page": "options.html"
   },
   "permissions": ["tabs", "storage"],
-  "version": "1.4.9"
+  "version": "1.4.10"
 }
