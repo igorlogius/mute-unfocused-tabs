@@ -102,7 +102,7 @@
     function isListed(url) {
         let re;
         for (var i=0;i < list.length;i++) {
-            re = new RegExp(re);
+            re = new RegExp(list[i]);
             if(re.test(url)) {
                 log('debug', 'isListed: ' + url);
                 return true;
