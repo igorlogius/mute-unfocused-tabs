@@ -136,22 +136,7 @@
 
       if (mode) {
         // manual
-        if (isListed(tab.url)) {
-          browser.browserAction.setBadgeText({ tabId: tab.id, text: "ON" });
-          browser.browserAction.setBadgeBackgroundColor({
-            tabId: tab.id,
-            color: "green",
-          });
-          browser.browserAction.setTitle({
-            tabId: tab.id,
-            title: "managed, by list",
-          });
-          setMuted(tab.id, tab.id !== aid);
-          browser.browserAction.disable(tab.id);
-          return;
-        }
-        if (tabIdStore.has(tab.id)) {
-          setMuted(tab.id, tab.id !== aid);
+        if (isListed(tab.url) != tabIdStore.has(tab.id)) { // Logical XOR
           browser.browserAction.setBadgeText({ tabId: tab.id, text: "ON" });
           browser.browserAction.setBadgeBackgroundColor({
             tabId: tab.id,
@@ -161,6 +146,8 @@
             tabId: tab.id,
             title: "managed, click to unmanage",
           });
+          setMuted(tab.id, tab.id !== aid);
+          return;
         } else {
           browser.browserAction.setBadgeText({ tabId: tab.id, text: "OFF" });
           browser.browserAction.setBadgeBackgroundColor({
@@ -225,20 +212,10 @@
     });
 
     for (const tab of tabs) {
-      if (mode) {
-        // manual
-        if (tabIdStore.has(tab.id)) {
-          tabIdStore.delete(tab.id);
-        } else {
-          tabIdStore.add(tab.id);
-        }
+      if (tabIdStore.has(tab.id)) {
+        tabIdStore.delete(tab.id);
       } else {
-        // automatic - default
-        if (tabIdStore.has(tab.id)) {
-          tabIdStore.delete(tab.id);
-        } else {
-          tabIdStore.add(tab.id);
-        }
+        tabIdStore.add(tab.id);
       }
     }
     updateMuteState();
