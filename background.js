@@ -19,8 +19,8 @@
   }
 
   function onRemoved(tabId /*, removeInfo*/) {
-    if (tabIdStore.has(tabId)) {
-      tabIdStore.delete(tabId);
+    if (excludedTabs.has(tabId)) {
+      excludedTabs.delete(tabId);
     }
   }
 
@@ -104,7 +104,7 @@
     return l;
   }
 
-  function isListed(url) {
+  function matchesRegexRules(url) {
     for (let i = 0; i < list.length; i++) {
       if (list[i].test(url)) {
         log("debug", "isListed: " + url);
@@ -133,71 +133,33 @@
         browser.browserAction.disable(tab.id);
         return;
       }
+      // if mode is exclude (true)
+      let shouldInvertBehaviour = excludedTabs.has(tab.id)
+      let shouldControlMute = !mode != (matchesRegexRules(tab.url) != shouldInvertBehaviour)
 
-      if (mode) {
-        // manual
-        if (isListed(tab.url) != tabIdStore.has(tab.id)) { // Logical XOR
-          browser.browserAction.setBadgeText({ tabId: tab.id, text: "ON" });
-          browser.browserAction.setBadgeBackgroundColor({
-            tabId: tab.id,
-            color: "green",
-          });
-          browser.browserAction.setTitle({
-            tabId: tab.id,
-            title: "managed, click to unmanage",
-          });
-          setMuted(tab.id, tab.id !== aid);
-          return;
-        } else {
-          browser.browserAction.setBadgeText({ tabId: tab.id, text: "OFF" });
-          browser.browserAction.setBadgeBackgroundColor({
-            tabId: tab.id,
-            color: "red",
-          });
-          browser.browserAction.setTitle({
-            tabId: tab.id,
-            title: "unmanaged, click to manage",
-          });
-        }
+      if (shouldControlMute) {
+        browser.browserAction.setBadgeText({ tabId: tab.id, text: "ON" });
+        browser.browserAction.setBadgeBackgroundColor({
+          tabId: tab.id,
+          color: "green",
+        });
+        browser.browserAction.setTitle({
+          tabId: tab.id,
+          title: "managed, click to unmanage",
+        });
+        setMuted(tab.id, tab.id !== aid);
+        return;
       } else {
-        // automatic
-        if (isListed(tab.url)) {
-          browser.browserAction.setBadgeText({ tabId: tab.id, text: "OFF" });
-          browser.browserAction.setBadgeBackgroundColor({
-            tabId: tab.id,
-            color: "red",
-          });
-          browser.browserAction.setTitle({
-            tabId: tab.id,
-            title: "unmanaged, by list",
-          });
-          browser.browserAction.disable(tab.id);
-          return;
-        }
-        if (tabIdStore.has(tab.id)) {
-          browser.browserAction.setBadgeText({ tabId: tab.id, text: "OFF" });
-          browser.browserAction.setBadgeBackgroundColor({
-            tabId: tab.id,
-            color: "red",
-          });
-          browser.browserAction.setTitle({
-            tabId: tab.id,
-            title: "unmanaged, click to manage",
-          });
-        } else {
-          setMuted(tab.id, tab.id !== aid);
-          browser.browserAction.setBadgeText({ tabId: tab.id, text: "ON" });
-          browser.browserAction.setBadgeBackgroundColor({
-            tabId: tab.id,
-            color: "green",
-          });
-          browser.browserAction.setTitle({
-            tabId: tab.id,
-            title: "managed, click to unmanage",
-          });
-        }
+        browser.browserAction.setBadgeText({ tabId: tab.id, text: "OFF" });
+        browser.browserAction.setBadgeBackgroundColor({
+          tabId: tab.id,
+          color: "red",
+        });
+        browser.browserAction.setTitle({
+          tabId: tab.id,
+          title: "unmanaged, click to manage",
+        });
       }
-      browser.browserAction.enable(tab.id);
     });
   }
 
@@ -212,10 +174,10 @@
     });
 
     for (const tab of tabs) {
-      if (tabIdStore.has(tab.id)) {
-        tabIdStore.delete(tab.id);
+      if (excludedTabs.has(tab.id)) {
+        excludedTabs.delete(tab.id);
       } else {
-        tabIdStore.add(tab.id);
+        excludedTabs.add(tab.id);
       }
     }
     updateMuteState();
@@ -227,7 +189,7 @@
     mode = await getMode();
     list = await getList();
 
-    tabIdStore.clear();
+    excludedTabs.clear();
 
     updateMuteState();
   }
@@ -242,7 +204,7 @@
 
   let mode = await getMode();
   let list = await getList();
-  let tabIdStore = new Set();
+  let excludedTabs = new Set();
 
   // add listeners
   browser.browserAction.onClicked.addListener(onClicked);
