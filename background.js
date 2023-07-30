@@ -19,13 +19,13 @@
   }
 
   function onRemoved(tabId /*, removeInfo*/) {
-    if (excludedTabs.has(tabId)) {
-      excludedTabs.delete(tabId);
+    if (manualList.has(tabId)) {
+      manualList.delete(tabId);
     }
   }
 
-  // false := unmanaged / aka. all tabs / default
-  // true := only managed / selected
+  // true := unmanaged / aka. all tabs / default
+  // false := only managed / selected
   async function getMode() {
     log("debug", "getMode");
     let store = undefined;
@@ -33,17 +33,17 @@
       store = await browser.storage.local.get("mode");
     } catch (e) {
       log("debug", "access to storage failed");
-      return false;
+      return true;
     }
     if (typeof store === "undefined") {
       log("debug", "store is undefined");
-      return false;
+      return true;
     }
     if (typeof store.mode !== "boolean") {
       log("debug", "store.mode is not boolean");
-      return false;
+      return true;
     }
-    return store.mode;
+    return !store.mode;
   }
 
   async function getList() {
@@ -117,7 +117,7 @@
   async function updateMuteState() {
     log("debug", "updateMuteState");
     let tabs = await browser.tabs.query({ active: true, currentWindow: true });
-    const aid = tabs[0].id;
+    const focusedTab = tabs[0].id;
     tabs = await browser.tabs.query({
       /*url: "<all_urls>"*/
     });
@@ -129,15 +129,22 @@
           tabId: tab.id,
           color: "white",
         });
-        browser.browserAction.setTitle({ tabId: tab.id, title: "unmanaged" });
+        browser.browserAction.setTitle({ tabId: tab.id, title: "Ignored" });
         browser.browserAction.disable(tab.id);
         return;
       }
-      // if mode is exclude (true)
-      let shouldInvertBehaviour = excludedTabs.has(tab.id)
-      let shouldControlMute = !mode != (matchesRegexRules(tab.url) != shouldInvertBehaviour)
 
-      if (shouldControlMute) {
+      // If automatic mode (mode == true), matching a regex rule will exclude it from
+      // being managed by this extension, unless it is also on the manual list.
+      //
+      // If manual mode (mode == false), matching a regex rule will mean its managed
+      // by the extension. Clicking on the extension button adds it to the exemption
+      // list, meaning it won't be managed despite matching a regex rule.
+      let automaticallyListed = matchesRegexRules(tab.url)
+      let manuallyListed = manualList.has(tab.id)
+      let isManagedTab = mode != (automaticallyListed != manuallyListed)
+
+      if (isManagedTab) {
         browser.browserAction.setBadgeText({ tabId: tab.id, text: "ON" });
         browser.browserAction.setBadgeBackgroundColor({
           tabId: tab.id,
@@ -145,10 +152,9 @@
         });
         browser.browserAction.setTitle({
           tabId: tab.id,
-          title: "managed, click to unmanage",
+          title: "Managed. Click to unmanage",
         });
-        setMuted(tab.id, tab.id !== aid);
-        return;
+        setMuted(tab.id, tab.id !== focusedTab);
       } else {
         browser.browserAction.setBadgeText({ tabId: tab.id, text: "OFF" });
         browser.browserAction.setBadgeBackgroundColor({
@@ -157,7 +163,7 @@
         });
         browser.browserAction.setTitle({
           tabId: tab.id,
-          title: "unmanaged, click to manage",
+          title: "Unmanaged. Click to manage",
         });
       }
     });
@@ -174,10 +180,10 @@
     });
 
     for (const tab of tabs) {
-      if (excludedTabs.has(tab.id)) {
-        excludedTabs.delete(tab.id);
+      if (manualList.has(tab.id)) {
+        manualList.delete(tab.id);
       } else {
-        excludedTabs.add(tab.id);
+        manualList.add(tab.id);
       }
     }
     updateMuteState();
@@ -189,7 +195,7 @@
     mode = await getMode();
     list = await getList();
 
-    excludedTabs.clear();
+    manualList.clear();
 
     updateMuteState();
   }
@@ -204,7 +210,7 @@
 
   let mode = await getMode();
   let list = await getList();
-  let excludedTabs = new Set();
+  let manualList = new Set();
 
   // add listeners
   browser.browserAction.onClicked.addListener(onClicked);
