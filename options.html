@@ -22,13 +22,24 @@
       />
       <input id="expbtn" type="button" name="impbtn" value="Export Rules" />
       <span>Manual Mode:<input id="mode" type="checkbox" /></span>
-      <h3>
-        Manage <abbr title="Matches will be unmanaged">Exclusions</abbr> (<abbr
-          title="Matches will be managed"
-          >Inclusions</abbr
-        >
-        in Manual Mode)
-      </h3>
+      <h3>Set inital states (via. RegEx-URL-Matches)</h3>
+      <small>
+        <ul>
+          <li>Default Mode: Matching tabs will initally be unmanaged</li>
+          <li>Manual Mode: Matching tabs will initally be managed</li>
+        </ul>
+        <ul>
+          <li>
+            Example 1: <code>^https:\/\/www\.twich\.tv.*</code>, matches all
+            twitch.tv sites
+          </li>
+          <li>
+            Example 2: <code>^https:\/\/www\.youtube\.com.*</code>, matches all
+            youtube.com sites
+          </li>
+        </ul>
+      </small>
+
       <table id="mainTable" border="1" style="width: 100%">
         <tbody id="mainTableBody" />
       </table>

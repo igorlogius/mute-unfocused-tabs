@@ -19,8 +19,8 @@
   }
 
   function onRemoved(tabId /*, removeInfo*/) {
-    if (tabIdStore.has(tabId)) {
-      tabIdStore.delete(tabId);
+    if (taggedManually.has(tabId)) {
+      taggedManually.delete(tabId);
     }
   }
 
@@ -46,8 +46,8 @@
     return store.mode;
   }
 
-  async function getList() {
-    log("debug", "getList");
+  async function getRegexList() {
+    log("debug", "getRegexList");
 
     let store = undefined;
     try {
@@ -104,10 +104,10 @@
     return l;
   }
 
-  function isListed(url) {
-    for (let i = 0; i < list.length; i++) {
-      if (list[i].test(url)) {
-        log("debug", "isListed: " + url);
+  function isRegexExcluded(url) {
+    for (let i = 0; i < regexList.length; i++) {
+      if (regexList[i].test(url)) {
+        log("debug", "isRegexExcluded: " + url);
         return true;
       }
     }
@@ -117,7 +117,7 @@
   async function updateMuteState() {
     log("debug", "updateMuteState");
     let tabs = await browser.tabs.query({ active: true, currentWindow: true });
-    const aid = tabs[0].id;
+    const activTabId = tabs[0].id;
     tabs = await browser.tabs.query({
       /*url: "<all_urls>"*/
     });
@@ -134,83 +134,40 @@
         return;
       }
 
-      if (mode) {
-        // manual
-        if (isListed(tab.url)) {
-          browser.browserAction.setBadgeText({ tabId: tab.id, text: "ON" });
-          browser.browserAction.setBadgeBackgroundColor({
-            tabId: tab.id,
-            color: "green",
-          });
-          browser.browserAction.setTitle({
-            tabId: tab.id,
-            title: "managed, by list",
-          });
-          setMuted(tab.id, tab.id !== aid);
-          browser.browserAction.disable(tab.id);
-          return;
-        }
-        if (tabIdStore.has(tab.id)) {
-          setMuted(tab.id, tab.id !== aid);
-          browser.browserAction.setBadgeText({ tabId: tab.id, text: "ON" });
-          browser.browserAction.setBadgeBackgroundColor({
-            tabId: tab.id,
-            color: "green",
-          });
-          browser.browserAction.setTitle({
-            tabId: tab.id,
-            title: "managed, click to unmanage",
-          });
-        } else {
-          browser.browserAction.setBadgeText({ tabId: tab.id, text: "OFF" });
-          browser.browserAction.setBadgeBackgroundColor({
-            tabId: tab.id,
-            color: "red",
-          });
-          browser.browserAction.setTitle({
-            tabId: tab.id,
-            title: "unmanaged, click to manage",
-          });
-        }
-      } else {
-        // automatic
-        if (isListed(tab.url)) {
-          browser.browserAction.setBadgeText({ tabId: tab.id, text: "OFF" });
-          browser.browserAction.setBadgeBackgroundColor({
-            tabId: tab.id,
-            color: "red",
-          });
-          browser.browserAction.setTitle({
-            tabId: tab.id,
-            title: "unmanaged, by list",
-          });
-          browser.browserAction.disable(tab.id);
-          return;
-        }
-        if (tabIdStore.has(tab.id)) {
-          browser.browserAction.setBadgeText({ tabId: tab.id, text: "OFF" });
-          browser.browserAction.setBadgeBackgroundColor({
-            tabId: tab.id,
-            color: "red",
-          });
-          browser.browserAction.setTitle({
-            tabId: tab.id,
-            title: "unmanaged, click to manage",
-          });
-        } else {
-          setMuted(tab.id, tab.id !== aid);
-          browser.browserAction.setBadgeText({ tabId: tab.id, text: "ON" });
-          browser.browserAction.setBadgeBackgroundColor({
-            tabId: tab.id,
-            color: "green",
-          });
-          browser.browserAction.setTitle({
-            tabId: tab.id,
-            title: "managed, click to unmanage",
-          });
-        }
-      }
       browser.browserAction.enable(tab.id);
+
+      const _taggedManually = taggedManually.has(tab.id);
+      const _regexList = isRegexExcluded(tab.url);
+
+      // The 4 causes where a tab is managed
+      const managed =
+        (!mode && !_regexList && !_taggedManually) ||
+        (!mode && _regexList && _taggedManually) ||
+        (mode && _regexList && !_taggedManually) ||
+        (mode && !_regexList && _taggedManually);
+
+      if (managed) {
+        setMuted(tab.id, tab.id !== activTabId);
+        browser.browserAction.setBadgeText({ tabId: tab.id, text: "ON" });
+        browser.browserAction.setBadgeBackgroundColor({
+          tabId: tab.id,
+          color: "green",
+        });
+        browser.browserAction.setTitle({
+          tabId: tab.id,
+          title: "managed, click to unmanage",
+        });
+        return;
+      }
+      browser.browserAction.setBadgeText({ tabId: tab.id, text: "OFF" });
+      browser.browserAction.setBadgeBackgroundColor({
+        tabId: tab.id,
+        color: "red",
+      });
+      browser.browserAction.setTitle({
+        tabId: tab.id,
+        title: "unmanaged, click to manage",
+      });
     });
   }
 
@@ -225,20 +182,10 @@
     });
 
     for (const tab of tabs) {
-      if (mode) {
-        // manual
-        if (tabIdStore.has(tab.id)) {
-          tabIdStore.delete(tab.id);
-        } else {
-          tabIdStore.add(tab.id);
-        }
+      if (taggedManually.has(tab.id)) {
+        taggedManually.delete(tab.id);
       } else {
-        // automatic - default
-        if (tabIdStore.has(tab.id)) {
-          tabIdStore.delete(tab.id);
-        } else {
-          tabIdStore.add(tab.id);
-        }
+        taggedManually.add(tab.id);
       }
     }
     updateMuteState();
@@ -248,11 +195,11 @@
     log("debug", "onStorageChange");
 
     mode = await getMode();
-    list = await getList();
+    regexList = await getRegexList();
 
-    tabIdStore.clear();
+    taggedManually.clear();
 
-    updateMuteState();
+    await updateMuteState();
   }
 
   // v v v v v v v v v v v v v
@@ -264,8 +211,8 @@
   const extname = manifest.name;
 
   let mode = await getMode();
-  let list = await getList();
-  let tabIdStore = new Set();
+  let regexList = await getRegexList();
+  let taggedManually = new Set();
 
   // add listeners
   browser.browserAction.onClicked.addListener(onClicked);
