@@ -118,9 +118,10 @@
     log("debug", "updateMuteState");
     let tabs = await browser.tabs.query({ active: true, currentWindow: true });
     const activTabId = tabs[0].id;
-    tabs = await browser.tabs.query({
-      /*url: "<all_urls>"*/
-    });
+    log("debug", "Querying tabs");
+    tabs = (await browser.tabs.query({}))
+      .filter(t => t.audible || t.mutedInfo.muted);
+    log("debug", "Queryed tabs");
     tabs.forEach(async (tab) => {
       // ignore not https? urls
       if (!url_regex.test(tab.url)) {
@@ -218,6 +219,7 @@
   browser.browserAction.onClicked.addListener(onClicked);
   browser.tabs.onRemoved.addListener(onRemoved);
   browser.tabs.onActivated.addListener(updateMuteState);
+  browser.tabs.onUpdated.addListener(updateMuteState);
   browser.windows.onFocusChanged.addListener(updateMuteState);
   browser.runtime.onInstalled.addListener(updateMuteState);
   browser.storage.onChanged.addListener(onStorageChange);
