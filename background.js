@@ -119,8 +119,9 @@
     let tabs = await browser.tabs.query({ active: true, currentWindow: true });
     const activTabId = tabs[0].id;
     log("debug", "Querying tabs");
-    tabs = (await browser.tabs.query({}))
-      .filter(t => t.audible || t.mutedInfo.muted);
+    tabs = (await browser.tabs.query({
+      /*url: "<all_urls>"*/
+    }));
     log("debug", "Queryed tabs");
     tabs.forEach(async (tab) => {
       // ignore not https? urls
@@ -148,7 +149,9 @@
         (mode && !_regexList && _taggedManually);
 
       if (managed) {
-        setMuted(tab.id, tab.id !== activTabId);
+        if (tab.audible || tab.mutedInfo.muted) {
+          setMuted(tab.id, tab.id !== activTabId);
+        }
         browser.browserAction.setBadgeText({ tabId: tab.id, text: "ON" });
         browser.browserAction.setBadgeBackgroundColor({
           tabId: tab.id,
