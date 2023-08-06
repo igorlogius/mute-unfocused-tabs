@@ -222,7 +222,10 @@
   browser.browserAction.onClicked.addListener(onClicked);
   browser.tabs.onRemoved.addListener(onRemoved);
   browser.tabs.onActivated.addListener(updateMuteState);
-  browser.tabs.onUpdated.addListener(updateMuteState);
+  const updateFilter = {
+    properties: ["audible", "mutedInfo"]
+  };
+  browser.tabs.onUpdated.addListener(updateMuteState, updateFilter);
   browser.windows.onFocusChanged.addListener(updateMuteState);
   browser.runtime.onInstalled.addListener(updateMuteState);
   browser.storage.onChanged.addListener(onStorageChange);
