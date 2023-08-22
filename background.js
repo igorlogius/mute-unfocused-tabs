@@ -222,6 +222,42 @@
   browser.runtime.onInstalled.addListener(updateMuteState);
   browser.storage.onChanged.addListener(onStorageChange);
 
+  browser.menus.create({
+    id: "unmanage",
+    title: "unmanage",
+    contexts: ["tab"],
+    onclick: async () => {
+      // get all selected
+      const tabs = await browser.tabs.query({
+        highlighted: true,
+        hidden: false,
+        currentWindow: true,
+      });
+      for (const tab of tabs) {
+        taggedManually.add(tab.id);
+      }
+      updateMuteState();
+    },
+  });
+
+  browser.menus.create({
+    id: "manage",
+    title: "manage",
+    contexts: ["tab"],
+    onclick: async () => {
+      // get all selected
+      const tabs = await browser.tabs.query({
+        highlighted: true,
+        hidden: false,
+        currentWindow: true,
+      });
+      for (const tab of tabs) {
+        taggedManually.delete(tab.id);
+      }
+      updateMuteState();
+    },
+  });
+
   // v v v v v v v v v v v v v
   //         E N D
   // ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^

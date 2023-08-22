@@ -15,6 +15,6 @@
   "options_ui": {
     "page": "options.html"
   },
-  "permissions": ["tabs", "storage"],
-  "version": "1.4.11"
+  "permissions": ["tabs", "storage", "menus"],
+  "version": "1.4.12"
 }
