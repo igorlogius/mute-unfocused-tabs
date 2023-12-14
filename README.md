@@ -1,5 +1,9 @@
 Allows to manage the mute state of a group (or all) tabs to only keep the currently focused one of the group unmuted and mute the others.  Quick-Change via Toolbar Button and permanent ex/inclusion via preferences 
 
+<b>Short Demo Video:</b>
+
+https://github.com/igorlogius/mute-unfocused-tabs/assets/67047467/8d8e7df5-fe6a-42ae-bf86-309f8e05dff2
+
 <b>Usage: Simple (Automatic Mode) </b>
 <ol>
     <li>  All Tabs are managed, click the toolbar icon, to toggle the manage or unmanaged state each tab.
