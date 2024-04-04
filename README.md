@@ -24,7 +24,7 @@ https://github.com/igorlogius/mute-unfocused-tabs/assets/67047467/8d8e7df5-fe6a-
   <li>Needs to be enabled on the preference page</li>
   <li>All Tabs are now unmanaged</li>
   <li>
-    click the toolbar icon, to toggle the manage or unmanaged state each tab.
+    click the toolbar icon, to toggle the manage or unmanaged state of each tab.
   </li>
   <li>
     The list on the preference page now allows to make default inclusions (set

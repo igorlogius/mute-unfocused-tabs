@@ -1,49 +1,46 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <title></title>
-  </head>
-  <body>
-    <form id="mainForm" accept-charset="utf-8">
-      <input type="submit" value="Save all changes" />
-      <input
-        id="impbtn_wrapper"
-        type="button"
-        name="impbtn"
-        value="Import Rules"
-      />
-      <input
-        id="impbtn"
-        type="file"
-        name="impbtn"
-        value=""
-        style="display: none"
-      />
-      <input id="expbtn" type="button" name="impbtn" value="Export Rules" />
-      <span>Manual Mode:<input id="mode" type="checkbox" /></span>
-      <h3>Set inital states (via. RegEx-URL-Matches)</h3>
-      <small>
-        <ul>
-          <li>Default Mode: Matching tabs will initally be unmanaged</li>
-          <li>Manual Mode: Matching tabs will initally be managed</li>
-        </ul>
-        <ul>
-          <li>
-            Example 1: <code>^https:\/\/www\.twich\.tv.*</code>, matches all
-            twitch.tv sites
-          </li>
-          <li>
-            Example 2: <code>^https:\/\/www\.youtube\.com.*</code>, matches all
-            youtube.com sites
-          </li>
-        </ul>
-      </small>
+<head>
+  <meta charset="utf-8" />
+</head>
+<body>
+  <form id="mainForm" accept-charset="utf-8">
+    <input type="submit" value="Save all changes" />
+    <input
+      id="impbtn_wrapper"
+      type="button"
+      name="impbtn"
+      value="Import Rules"
+    />
+    <input
+      id="impbtn"
+      type="file"
+      name="impbtn"
+      value=""
+      style="display: none"
+    />
+    <input id="expbtn" type="button" name="impbtn" value="Export Rules" />
+    <span>Manual Mode:<input id="mode" type="checkbox" /></span>
+    <h3>Set inital states (via. RegEx-URL-Matches)</h3>
+    <small>
+      <ul>
+        <li>Default Mode: Matching tabs will initally be unmanaged</li>
+        <li>Manual Mode: Matching tabs will initally be managed</li>
+      </ul>
+      <ul>
+        <li>
+          Example 1: <code>^https:\/\/www\.twich\.tv.*</code>, matches all
+          twitch.tv sites
+        </li>
+        <li>
+          Example 2: <code>^https:\/\/www\.youtube\.com.*</code>, matches all
+          youtube.com sites
+        </li>
+      </ul>
+    </small>
 
-      <table id="mainTable" border="1" style="width: 100%">
-        <tbody id="mainTableBody" />
-      </table>
-    </form>
-    <script src="options.js"></script>
-  </body>
-</html>
+    <table id="mainTable" border="1" style="width: 100%">
+      <tbody id="mainTableBody" />
+    </table>
+  </form>
+  <script src="options.js"></script>
+</body>
