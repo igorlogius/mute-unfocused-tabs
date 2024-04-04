@@ -1,5 +1,6 @@
 {
   "author": "igorlogius",
+  "homepage_url": "https://github.com/igorlogius",
   "background": {
     "scripts": ["background.js"]
   },
@@ -16,5 +17,5 @@
     "page": "options.html"
   },
   "permissions": ["tabs", "storage", "menus"],
-  "version": "1.4.12"
+  "version": "1.4.13"
 }
