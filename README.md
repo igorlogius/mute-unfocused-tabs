@@ -2,6 +2,8 @@ Allows to manage the mute state of a group (or all) tabs to only keep the
 currently focused one of the group unmuted and mute the others. Quick-Change via
 Toolbar Button and permanent ex/inclusion via preferences
 
+[![](https://raw.githubusercontent.com/igorlogius/igorlogius/main/geFxAddon.png)](https://addons.mozilla.org/firefox/addon/mute-unfocused-tabs/)
+
 ### [Click here to report a bug, make a suggestion or ask a question](https://github.com/igorlogius/igorlogius/issues/new/choose)
 
 <b>Short Demo Video:</b>
