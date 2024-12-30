@@ -195,6 +195,11 @@
     log("debug", "onStorageChange");
 
     mode = await getMode();
+
+    browser.menus.update("mmme", {
+      checked: mode,
+    });
+
     regexList = await getRegexList();
 
     taggedManually.clear();
@@ -255,6 +260,20 @@
         taggedManually.delete(tab.id);
       }
       updateMuteState();
+    },
+  });
+
+  browser.menus.create({
+    id: "mmme",
+    title: "Whitelist Mode",
+    contexts: ["browser_action"],
+    type: "checkbox",
+    checked: mode,
+    onclick: async (info, tab) => {
+      console.debug(info);
+      if (mode !== info.checked) {
+        browser.storage.local.set({ mode: info.checked }).catch(console.error);
+      }
     },
   });
 
