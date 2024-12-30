@@ -265,7 +265,7 @@
 
   browser.menus.create({
     id: "mmme",
-    title: "Whitelist Mode",
+    title: "Manual Mode",
     contexts: ["browser_action"],
     type: "checkbox",
     checked: mode,
