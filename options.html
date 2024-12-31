@@ -2,11 +2,14 @@
 <head>
   <meta charset="utf-8" />
   <style>
-    body {
-      background: lightgray;
-      min-height: 450px;
-      padding: 10px;
-    }
+	:root {
+	  color-scheme: light dark;
+	}
+
+	.element {
+	  color: light-dark(black, white);
+	  background-color: light-dark(white, black);
+	}
   </style>
 </head>
 <body>

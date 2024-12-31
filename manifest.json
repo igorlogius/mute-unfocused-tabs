@@ -17,5 +17,5 @@
     "page": "options.html"
   },
   "permissions": ["tabs", "storage", "menus"],
-  "version": "1.4.17"
+  "version": "1.4.18"
 }
