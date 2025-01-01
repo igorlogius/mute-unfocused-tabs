@@ -2,60 +2,33 @@
 <head>
   <meta charset="utf-8" />
   <style>
-	:root {
-	  color-scheme: light dark;
-	}
-
-	.element {
-	  color: light-dark(black, white);
-	  background-color: light-dark(white, black);
-	}
+    :root {
+      color-scheme: light dark;
+    }
+    .element {
+      color: light-dark(black, white);
+      background-color: light-dark(white, black);
+    }
   </style>
 </head>
 <body>
-  <form id="mainForm" accept-charset="utf-8">
-    <fieldset>
-      <input type="submit" value="Save all changes" />
-      <input
-        id="impbtn_wrapper"
-        type="button"
-        name="impbtn"
-        value="Import Rules"
-      />
-      <input
-        id="impbtn"
-        type="file"
-        name="impbtn"
-        value=""
-        style="display: none"
-      />
-      <input id="expbtn" type="button" name="impbtn" value="Export Rules" />
-      <span>Manual Mode:<input id="mode" type="checkbox" /></span>
-    </fieldset>
-    <fieldset>
-      <h3>Set inital states (via. RegEx-URL-Matches)</h3>
-      <small>
-        <ul>
-          <li>Default Mode: Matching tabs will initally be unmanaged</li>
-          <li>Manual Mode: Matching tabs will initally be managed</li>
-        </ul>
-        <ul>
-          <li>
-            Example 1: <code>^https:\/\/www\.twich\.tv.*</code>, matches all
-            twitch.tv sites
-          </li>
-          <li>
-            Example 2: <code>^https:\/\/www\.youtube\.com.*</code>, matches all
-            youtube.com sites
-          </li>
-        </ul>
-      </small>
-    </fieldset>
-    <fieldset>
-      <table id="mainTable" border="1" style="width: 100%">
-        <tbody id="mainTableBody" />
-      </table>
-    </fieldset>
-  </form>
+  <fieldset>
+    <span
+      >Whitelist mode:<input id="mode" type="checkbox" /> ( only matching tabs
+      will be managed )
+    </span>
+  </fieldset>
+  <fieldset>
+    <textarea
+      id="listmatchers"
+      style="width: 100%; min-height: 20em"
+      placeholder="Enter regular expressions line by line here
+Examples:
+    ^https:\/\/www\.facebook\.com.*
+    ^https:\/\/example\.net.*
+    ^https:\/\/.*\.wikipedia\.org.*
+"
+    ></textarea>
+  </fieldset>
   <script src="options.js"></script>
 </body>

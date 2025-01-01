@@ -3,6 +3,17 @@
 (async () => {
   const url_regex = new RegExp("^https?://");
 
+  async function getFromStorage(type, id, fallback) {
+    let tmp = await browser.storage.local.get(id);
+    return typeof tmp[id] === type ? tmp[id] : fallback;
+  }
+
+  async function setToStorage(id, value) {
+    let obj = {};
+    obj[id] = value;
+    return browser.storage.local.set(obj);
+  }
+
   const log = (level, msg) => {
     level = level.trim().toLowerCase();
     if (
@@ -24,79 +35,23 @@
     }
   }
 
-  // false := unmanaged / aka. all tabs / default
-  // true := only managed / selected
-  async function getMode() {
-    log("debug", "getMode");
-    let store = undefined;
-    try {
-      store = await browser.storage.local.get("mode");
-    } catch (e) {
-      log("debug", "access to storage failed");
-      return false;
-    }
-    if (typeof store === "undefined") {
-      log("debug", "store is undefined");
-      return false;
-    }
-    if (typeof store.mode !== "boolean") {
-      log("debug", "store.mode is not boolean");
-      return false;
-    }
-    return store.mode;
-  }
-
   async function getRegexList() {
     log("debug", "getRegexList");
 
-    let store = undefined;
-    try {
-      store = await browser.storage.local.get("selectors");
-    } catch (e) {
-      log("debug", "access to storage failed");
-      return [];
-    }
+    let tmp = await getFromStorage("string", "listmatchers", "");
 
-    if (typeof store === "undefined") {
-      log("debug", "store is undefined");
-      return [];
-    }
+    let l = [];
 
-    if (typeof store.selectors === "undefined") {
-      log("debug", "store.selectors is undefined");
-      return [];
-    }
-
-    if (typeof store.selectors.forEach !== "function") {
-      log("error", "store.selectors is not iterable");
-      return [];
-    }
-
-    const l = [];
-
-    store.selectors.forEach((e) => {
-      // check activ
-      if (typeof e.activ !== "boolean") {
-        return;
-      }
-      if (e.activ !== true) {
-        return;
-      }
-
-      // check url regex
-      if (typeof e.url_regex !== "string") {
-        return;
-      }
-      e.url_regex = e.url_regex.trim();
-      if (e.url_regex === "") {
+    tmp.split("\n").forEach((line) => {
+      line = line.trim();
+      if (line === "") {
         return;
       }
 
       try {
-        log("debug", e.url_regex);
-        l.push(new RegExp(e.url_regex));
+        l.push(new RegExp(line));
       } catch (e) {
-        log("WARN", "invalid url regex : " + e.url_regex);
+        log("WARN", "invalid url regex : " + line);
         return;
       }
     });
@@ -139,7 +94,7 @@
       const _taggedManually = taggedManually.has(tab.id);
       const _regexList = isRegexExcluded(tab.url);
 
-      // The 4 causes where a tab is managed
+      // The 4 cases where a tab is managed
       const managed =
         (!mode && !_regexList && !_taggedManually) ||
         (!mode && _regexList && _taggedManually) ||
@@ -194,7 +149,7 @@
   async function onStorageChange(/*changes, area*/) {
     log("debug", "onStorageChange");
 
-    mode = await getMode();
+    mode = await getFromStorage("boolean", "mode", false);
 
     browser.menus.update("mmme", {
       checked: mode,
@@ -207,6 +162,23 @@
     await updateMuteState();
   }
 
+  async function migrateOldData(details) {
+    if (details.reason === "update") {
+      let tmp = await getFromStorage("object", "selectors", []);
+
+      let out = "";
+      for (let t of tmp) {
+        if (typeof t.url_regex === "string") {
+          out += t.url_regex.trim() + "\n";
+        }
+      }
+
+      if (out !== "") {
+        setToStorage("listmatchers", out);
+      }
+    }
+  }
+
   // v v v v v v v v v v v v v
   //         S T A R T
   // ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
@@ -215,7 +187,7 @@
   const manifest = browser.runtime.getManifest();
   const extname = manifest.name;
 
-  let mode = await getMode();
+  let mode = await getFromStorage("boolean", "mode", false);
   let regexList = await getRegexList();
   let taggedManually = new Set();
 
@@ -226,6 +198,7 @@
   browser.windows.onFocusChanged.addListener(updateMuteState);
   browser.runtime.onInstalled.addListener(updateMuteState);
   browser.storage.onChanged.addListener(onStorageChange);
+  browser.runtime.onInstalled.addListener(migrateOldData);
 
   browser.menus.create({
     id: "unmanage",
