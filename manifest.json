@@ -1,15 +1,16 @@
 {
   "author": "igorlogius",
-  "homepage_url": "https://github.com/igorlogius",
+  "homepage_url": "https://github.com/igorlogius/mute-unfocused-tabs",
+  "description": "Prevent distractions by only allowing focused tabs to be audible",
   "background": {
     "scripts": ["background.js"]
   },
   "browser_action": {
     "default_area": "navbar",
-    "default_icon": "icon.svg"
+    "default_icon": "icon.png"
   },
   "icons": {
-    "256": "icon.svg"
+    "320": "icon.png"
   },
   "manifest_version": 2,
   "name": "Mute Unfocused Tabs",
@@ -17,5 +18,5 @@
     "page": "options.html"
   },
   "permissions": ["tabs", "storage", "menus"],
-  "version": "1.4.19"
+  "version": "1.4.20"
 }
