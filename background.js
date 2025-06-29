@@ -71,10 +71,11 @@
 
   async function updateMuteState() {
     log("debug", "updateMuteState");
-    let tabs = await browser.tabs.query({ active: true, currentWindow: true });
-    const activTabId = tabs[0].id;
+    //let tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    //const activTabId = tabs[0].id;
     tabs = await browser.tabs.query({
       /*url: "<all_urls>"*/
+      currentWindow: true,
     });
     tabs.forEach(async (tab) => {
       // ignore not https? urls
@@ -102,7 +103,7 @@
         (mode && !_regexList && _taggedManually);
 
       if (managed) {
-        setMuted(tab.id, tab.id !== activTabId);
+        setMuted(tab.id, !tab.active);
         browser.browserAction.setBadgeText({ tabId: tab.id, text: "ON" });
         browser.browserAction.setBadgeBackgroundColor({
           tabId: tab.id,
@@ -126,22 +127,13 @@
     });
   }
 
-  async function onClicked(/*tab ,data*/) {
+  async function onClicked(tab) {
     log("debug", "onClicked");
 
-    // get all selected
-    const tabs = await browser.tabs.query({
-      highlighted: true,
-      hidden: false,
-      currentWindow: true,
-    });
-
-    for (const tab of tabs) {
-      if (taggedManually.has(tab.id)) {
-        taggedManually.delete(tab.id);
-      } else {
-        taggedManually.add(tab.id);
-      }
+    if (taggedManually.has(tab.id)) {
+      taggedManually.delete(tab.id);
+    } else {
+      taggedManually.add(tab.id);
     }
     updateMuteState();
   }
@@ -195,6 +187,11 @@
   browser.browserAction.onClicked.addListener(onClicked);
   browser.tabs.onRemoved.addListener(onRemoved);
   browser.tabs.onActivated.addListener(updateMuteState);
+  browser.tabs.onCreated.addListener((tab) => {
+    if (!tab.active) {
+      setMuted(tab.id, true);
+    }
+  });
   browser.windows.onFocusChanged.addListener(updateMuteState);
   browser.runtime.onInstalled.addListener(updateMuteState);
   browser.storage.onChanged.addListener(onStorageChange);
@@ -204,15 +201,19 @@
     id: "unmanage",
     title: "unmanage",
     contexts: ["tab"],
-    onclick: async () => {
-      // get all selected
-      const tabs = await browser.tabs.query({
-        highlighted: true,
-        hidden: false,
-        currentWindow: true,
-      });
-      for (const tab of tabs) {
+    onclick: async (info, tab) => {
+      if (!tab.highlighted) {
         taggedManually.add(tab.id);
+      } else {
+        (
+          await browser.tabs.query({
+            highlighted: true,
+            hidden: false,
+            currentWindow: true,
+          })
+        ).forEach((t) => {
+          taggedManually.add(t.id);
+        });
       }
       updateMuteState();
     },
@@ -222,15 +223,19 @@
     id: "manage",
     title: "manage",
     contexts: ["tab"],
-    onclick: async () => {
-      // get all selected
-      const tabs = await browser.tabs.query({
-        highlighted: true,
-        hidden: false,
-        currentWindow: true,
-      });
-      for (const tab of tabs) {
+    onclick: async (info, tab) => {
+      if (!tab.highlighted) {
         taggedManually.delete(tab.id);
+      } else {
+        (
+          await browser.tabs.query({
+            highlighted: true,
+            hidden: false,
+            currentWindow: true,
+          })
+        ).forEach((t) => {
+          taggedManually.delete(t.id);
+        });
       }
       updateMuteState();
     },
