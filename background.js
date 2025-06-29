@@ -154,23 +154,6 @@
     await updateMuteState();
   }
 
-  async function migrateOldData(details) {
-    if (details.reason === "update") {
-      let tmp = await getFromStorage("object", "selectors", []);
-
-      let out = "";
-      for (let t of tmp) {
-        if (typeof t.url_regex === "string") {
-          out += t.url_regex.trim() + "\n";
-        }
-      }
-
-      if (out !== "") {
-        setToStorage("listmatchers", out);
-      }
-    }
-  }
-
   // v v v v v v v v v v v v v
   //         S T A R T
   // ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^ ^
@@ -190,7 +173,6 @@
   browser.windows.onFocusChanged.addListener(updateMuteState);
   browser.runtime.onInstalled.addListener(updateMuteState);
   browser.storage.onChanged.addListener(onStorageChange);
-  browser.runtime.onInstalled.addListener(migrateOldData);
   browser.tabs.onUpdated.addListener(updateMuteState, { properties: ["url"] });
 
   browser.menus.create({
