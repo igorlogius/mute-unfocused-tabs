@@ -85,7 +85,7 @@
           tabId: tab.id,
           color: "white",
         });
-        browser.browserAction.setTitle({ tabId: tab.id, title: "unmanaged" });
+        browser.browserAction.setTitle({ tabId: tab.id, title: "exclude" });
         browser.browserAction.disable(tab.id);
         return;
       }
@@ -111,7 +111,7 @@
         });
         browser.browserAction.setTitle({
           tabId: tab.id,
-          title: "managed, click to unmanage",
+          title: "exclude",
         });
         return;
       }
@@ -122,7 +122,7 @@
       });
       browser.browserAction.setTitle({
         tabId: tab.id,
-        title: "unmanaged, click to manage",
+        title: "include",
       });
     });
   }
@@ -187,19 +187,15 @@
   browser.browserAction.onClicked.addListener(onClicked);
   browser.tabs.onRemoved.addListener(onRemoved);
   browser.tabs.onActivated.addListener(updateMuteState);
-  browser.tabs.onCreated.addListener((tab) => {
-    if (!tab.active) {
-      setMuted(tab.id, true);
-    }
-  });
   browser.windows.onFocusChanged.addListener(updateMuteState);
   browser.runtime.onInstalled.addListener(updateMuteState);
   browser.storage.onChanged.addListener(onStorageChange);
   browser.runtime.onInstalled.addListener(migrateOldData);
+  browser.tabs.onUpdated.addListener(updateMuteState, { properties: ["url"] });
 
   browser.menus.create({
-    id: "unmanage",
-    title: "unmanage",
+    id: "exclude",
+    title: "exclude",
     contexts: ["tab"],
     onclick: async (info, tab) => {
       if (!tab.highlighted) {
@@ -220,8 +216,8 @@
   });
 
   browser.menus.create({
-    id: "manage",
-    title: "manage",
+    id: "include",
+    title: "include",
     contexts: ["tab"],
     onclick: async (info, tab) => {
       if (!tab.highlighted) {
@@ -238,20 +234,6 @@
         });
       }
       updateMuteState();
-    },
-  });
-
-  browser.menus.create({
-    id: "mmme",
-    title: "Manual Mode",
-    contexts: ["browser_action"],
-    type: "checkbox",
-    checked: mode,
-    onclick: async (info, tab) => {
-      console.debug(info);
-      if (mode !== info.checked) {
-        browser.storage.local.set({ mode: info.checked }).catch(console.error);
-      }
     },
   });
 
